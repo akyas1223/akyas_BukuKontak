@@ -7,37 +7,41 @@ class HalamanBeranda extends StatefulWidget {
   State<HalamanBeranda> createState() => _HalamanBerandaState();
 }
 
-// 1. Tambahkan 'with SingleTickerProviderStateMixin' agar bisa menggunakan animasi Tab
 class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProviderStateMixin {
   List<Map<String, String>> daftarKontak = [];
+  
+  // 1. Menambahkan data fiko langsung ke list kontak favorit
+  List<Map<String, String>> daftarFavorit = [
+    {
+      'nama': 'fiko',
+      'email': 'fiko@gmail.com',
+      'no_hp': '082220577493',
+    },
+  ];
 
-  // 2. Buat variabel TabController
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    // 3. Inisialisasi TabController dengan jumlah tab = 2
     _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
-    // 4. Buang controller saat halaman ditutup agar aplikasi tidak berat (memory leak)
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // DefaultTabController dihapus, langsung gunakan Scaffold
     return Scaffold(
       appBar: AppBar(
         title: const Text('BUKU KONTAK'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         bottom: TabBar(
-          controller: _tabController, // Hubungkan TabBar dengan controller manual
+          controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
@@ -62,7 +66,7 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
               title: const Text('Kontak'),
               onTap: () {
                 Navigator.pop(context);
-                _tabController.animateTo(0); // Memaksa pindah ke tab Kontak saat diklik
+                _tabController.animateTo(0);
               },
             ),
             ListTile(
@@ -75,7 +79,7 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                   setState(() {
                     daftarKontak.add(result);
                   });
-                  _tabController.animateTo(0); // Memaksa pindah ke tab Kontak setelah simpan
+                  _tabController.animateTo(0);
                 }
               },
             ),
@@ -84,7 +88,7 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
               title: const Text('Favorit'),
               onTap: () {
                 Navigator.pop(context);
-                _tabController.animateTo(1); // Memaksa pindah ke tab Favorit saat diklik
+                _tabController.animateTo(1);
               },
             ),
             ListTile(
@@ -99,9 +103,9 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
         ),
       ),
       body: TabBarView(
-        controller: _tabController, // Hubungkan TabBarView dengan controller manual
+        controller: _tabController,
         children: [
-          // Tampilan tab Kontak
+          // Tampilan tab Utama Kontak
           daftarKontak.isEmpty
               ? const Center(child: Text('Belum ada kontak'))
               : ListView.builder(
@@ -115,20 +119,30 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                     );
                   },
                 ),
-          // Tampilan tab Favorit
-          const Center(child: Text('Belum ada kontak favorit')),
+          // Tampilan tab Favorit (menampilkan data fiko)
+          daftarFavorit.isEmpty
+              ? const Center(child: Text('Belum ada kontak favorit'))
+              : ListView.builder(
+                  itemCount: daftarFavorit.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      leading: const Icon(Icons.person, size: 40),
+                      title: Text(daftarFavorit[index]['nama']!),
+                      subtitle: Text('${daftarFavorit[index]['email']!}\n${daftarFavorit[index]['no_hp']!}'),
+                      isThreeLine: true,
+                    );
+                  },
+                ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Menunggu data dari Halaman Tambah Kontak[cite: 1]
           final result = await Navigator.pushNamed(context, '/tambah_kontak');
           
           if (result != null && result is Map<String, String>) {
             setState(() {
               daftarKontak.add(result);
             });
-            // PERINTAH INI YANG MEMAKSA PINDAH KE TAB KONTAK
             _tabController.animateTo(0); 
           }
         },
