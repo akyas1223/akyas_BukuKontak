@@ -1,3 +1,4 @@
+import 'dart:async'; // TUGAS 6: Import library untuk Stream
 import 'package:flutter/material.dart';
 
 class HalamanBeranda extends StatefulWidget {
@@ -8,7 +9,6 @@ class HalamanBeranda extends StatefulWidget {
 }
 
 class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProviderStateMixin {
-  // TUGAS 4: Mengubah tipe data Map menjadi dynamic agar bisa menerima nilai null dari Kategori
   List<Map<String, dynamic>> daftarKontak = [];
 
   List<Map<String, dynamic>> daftarFavorit = [
@@ -16,11 +16,15 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
       'nama': 'fiko',
       'email': 'fiko@gmail.com',
       'no_hp': '082220577493',
-      'kategori': 'Teman', // Menambahkan default kategori
+      'kategori': 'Teman',
     },
   ];
 
   late TabController _tabController;
+
+  // TUGAS 6: Membuat StreamController dan TextEditingController untuk pencarian
+  final StreamController<String> _searchController = StreamController<String>.broadcast();
+  final TextEditingController _searchInputController = TextEditingController();
 
   @override
   void initState() {
@@ -30,6 +34,9 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
 
   @override
   void dispose() {
+    // TUGAS 6: Menutup stream controller saat halaman dihancurkan untuk mencegah memory leak
+    _searchController.close();
+    _searchInputController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -76,7 +83,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
               onTap: () async {
                 Navigator.pop(context);
                 final result = await Navigator.pushNamed(context, '/tambah_kontak');
-                // TUGAS 4: Pengecekan disesuaikan dengan Map<String, dynamic>
                 if (result != null && result is Map<String, dynamic>) {
                   setState(() {
                     daftarKontak.add(result);
@@ -107,34 +113,74 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Tampilan tab Utama Kontak
-          daftarKontak.isEmpty
-              ? const Center(child: Text('Belum ada kontak'))
-              : ListView.builder(
-                  itemCount: daftarKontak.length,
-                  itemBuilder: (context, index) {
-                    final item = daftarKontak[index];
-                    
-                    String inisial = item['nama'] != null && item['nama'].isNotEmpty
-                        ? item['nama'][0].toUpperCase()
-                        : '?';
-
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        child: Text(
-                          inisial,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      title: Text(item['nama'] ?? ''),
-                      // TUGAS 4: Menampilkan Kategori menggunakan null-aware operator (??)
-                      subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
-                      isThreeLine: true,
-                    );
+          // TUGAS 6: Memodifikasi tab Utama Kontak dengan Column untuk menambahkan TextField pencarian
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _searchInputController,
+                  decoration: const InputDecoration(
+                    labelText: 'Cari Kontak (Nama / Kategori)',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (text) {
+                    // Mengirimkan teks yang diketik ke dalam stream
+                    _searchController.add(text);
                   },
                 ),
+              ),
+              Expanded(
+                // Menggunakan StreamBuilder untuk mendengarkan perubahan pada stream pencarian
+                child: StreamBuilder<String>(
+                  stream: _searchController.stream,
+                  builder: (context, snapshot) {
+                    // Mengambil kata kunci pencarian, ubah ke huruf kecil
+                    String query = snapshot.data?.toLowerCase() ?? '';
+
+                    // Menyaring daftarKontak berdasarkan Nama ATAU Kategori
+                    List<Map<String, dynamic>> filteredList = daftarKontak.where((kontak) {
+                      bool matchNama = (kontak['nama'] ?? '').toLowerCase().contains(query);
+                      bool matchKategori = (kontak['kategori'] ?? '').toLowerCase().contains(query);
+                      return matchNama || matchKategori;
+                    }).toList();
+
+                    if (filteredList.isEmpty && daftarKontak.isNotEmpty) {
+                      return const Center(child: Text('Kontak tidak ditemukan'));
+                    }
+
+                    return filteredList.isEmpty
+                        ? const Center(child: Text('Belum ada kontak'))
+                        : ListView.builder(
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredList[index];
+                              
+                              String inisial = item['nama'] != null && item['nama'].isNotEmpty
+                                  ? item['nama'][0].toUpperCase()
+                                  : '?';
+
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  child: Text(
+                                    inisial,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                title: Text(item['nama'] ?? ''),
+                                subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
+                                isThreeLine: true,
+                              );
+                            },
+                          );
+                  },
+                ),
+              ),
+            ],
+          ),
                 
           // Tampilan tab Favorit
           daftarFavorit.isEmpty
@@ -158,7 +204,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                         ),
                       ),
                       title: Text(item['nama'] ?? ''),
-                      // TUGAS 4: Menampilkan Kategori menggunakan null-aware operator (??)
                       subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
                       isThreeLine: true,
                     );
@@ -170,7 +215,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/tambah_kontak');
           
-          // TUGAS 4: Pengecekan disesuaikan dengan Map<String, dynamic>
           if (result != null && result is Map<String, dynamic>) {
             setState(() {
               daftarKontak.add(result);
