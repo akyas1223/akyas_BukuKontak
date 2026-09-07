@@ -9,7 +9,7 @@ class HalamanBeranda extends StatefulWidget {
 
 class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProviderStateMixin {
   List<Map<String, String>> daftarKontak = [];
-  
+
   // 1. Menambahkan data fiko langsung ke list kontak favorit
   List<Map<String, String>> daftarFavorit = [
     {
@@ -111,24 +111,55 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
               : ListView.builder(
                   itemCount: daftarKontak.length,
                   itemBuilder: (context, index) {
+                    final item = daftarKontak[index];
+                    
+                    // TUGAS 3: Logika untuk mengambil inisial huruf pertama nama kontak
+                    String inisial = item['nama'] != null && item['nama']!.isNotEmpty
+                        ? item['nama']![0].toUpperCase()
+                        : '?';
+
                     return ListTile(
-                      leading: const Icon(Icons.person, size: 40),
-                      title: Text(daftarKontak[index]['nama']!),
-                      subtitle: Text('${daftarKontak[index]['email']!}\n${daftarKontak[index]['no_hp']!}'),
+                      // TUGAS 3: Mengubah Icon menjadi CircleAvatar
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        child: Text(
+                          inisial,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      title: Text(item['nama'] ?? ''),
+                      subtitle: Text('${item['email']}\n${item['no_hp']}'),
                       isThreeLine: true,
                     );
                   },
                 ),
-          // Tampilan tab Favorit (menampilkan data fiko)
+                
+          // Tampilan tab Favorit
           daftarFavorit.isEmpty
               ? const Center(child: Text('Belum ada kontak favorit'))
               : ListView.builder(
                   itemCount: daftarFavorit.length,
                   itemBuilder: (context, index) {
+                    final item = daftarFavorit[index];
+                    
+                    // TUGAS 3: Logika untuk mengambil inisial huruf pertama nama kontak
+                    String inisial = item['nama'] != null && item['nama']!.isNotEmpty
+                        ? item['nama']![0].toUpperCase()
+                        : '?';
+
                     return ListTile(
-                      leading: const Icon(Icons.person, size: 40),
-                      title: Text(daftarFavorit[index]['nama']!),
-                      subtitle: Text('${daftarFavorit[index]['email']!}\n${daftarFavorit[index]['no_hp']!}'),
+                      // TUGAS 3: Mengubah Icon menjadi CircleAvatar
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        child: Text(
+                          inisial,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      title: Text(item['nama'] ?? ''),
+                      subtitle: Text('${item['email']}\n${item['no_hp']}'),
                       isThreeLine: true,
                     );
                   },
