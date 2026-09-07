@@ -8,14 +8,15 @@ class HalamanBeranda extends StatefulWidget {
 }
 
 class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProviderStateMixin {
-  List<Map<String, String>> daftarKontak = [];
+  // TUGAS 4: Mengubah tipe data Map menjadi dynamic agar bisa menerima nilai null dari Kategori
+  List<Map<String, dynamic>> daftarKontak = [];
 
-  // 1. Menambahkan data fiko langsung ke list kontak favorit
-  List<Map<String, String>> daftarFavorit = [
+  List<Map<String, dynamic>> daftarFavorit = [
     {
       'nama': 'fiko',
       'email': 'fiko@gmail.com',
       'no_hp': '082220577493',
+      'kategori': 'Teman', // Menambahkan default kategori
     },
   ];
 
@@ -75,7 +76,8 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
               onTap: () async {
                 Navigator.pop(context);
                 final result = await Navigator.pushNamed(context, '/tambah_kontak');
-                if (result != null && result is Map<String, String>) {
+                // TUGAS 4: Pengecekan disesuaikan dengan Map<String, dynamic>
+                if (result != null && result is Map<String, dynamic>) {
                   setState(() {
                     daftarKontak.add(result);
                   });
@@ -113,13 +115,11 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                   itemBuilder: (context, index) {
                     final item = daftarKontak[index];
                     
-                    // TUGAS 3: Logika untuk mengambil inisial huruf pertama nama kontak
-                    String inisial = item['nama'] != null && item['nama']!.isNotEmpty
-                        ? item['nama']![0].toUpperCase()
+                    String inisial = item['nama'] != null && item['nama'].isNotEmpty
+                        ? item['nama'][0].toUpperCase()
                         : '?';
 
                     return ListTile(
-                      // TUGAS 3: Mengubah Icon menjadi CircleAvatar
                       leading: CircleAvatar(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
@@ -129,7 +129,8 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                         ),
                       ),
                       title: Text(item['nama'] ?? ''),
-                      subtitle: Text('${item['email']}\n${item['no_hp']}'),
+                      // TUGAS 4: Menampilkan Kategori menggunakan null-aware operator (??)
+                      subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
                       isThreeLine: true,
                     );
                   },
@@ -143,13 +144,11 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                   itemBuilder: (context, index) {
                     final item = daftarFavorit[index];
                     
-                    // TUGAS 3: Logika untuk mengambil inisial huruf pertama nama kontak
-                    String inisial = item['nama'] != null && item['nama']!.isNotEmpty
-                        ? item['nama']![0].toUpperCase()
+                    String inisial = item['nama'] != null && item['nama'].isNotEmpty
+                        ? item['nama'][0].toUpperCase()
                         : '?';
 
                     return ListTile(
-                      // TUGAS 3: Mengubah Icon menjadi CircleAvatar
                       leading: CircleAvatar(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
@@ -159,7 +158,8 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                         ),
                       ),
                       title: Text(item['nama'] ?? ''),
-                      subtitle: Text('${item['email']}\n${item['no_hp']}'),
+                      // TUGAS 4: Menampilkan Kategori menggunakan null-aware operator (??)
+                      subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
                       isThreeLine: true,
                     );
                   },
@@ -170,7 +170,8 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/tambah_kontak');
           
-          if (result != null && result is Map<String, String>) {
+          // TUGAS 4: Pengecekan disesuaikan dengan Map<String, dynamic>
+          if (result != null && result is Map<String, dynamic>) {
             setState(() {
               daftarKontak.add(result);
             });
