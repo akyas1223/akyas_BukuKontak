@@ -1,5 +1,6 @@
-import 'dart:async'; // TUGAS 6: Import library untuk Stream
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'halaman_edit_kontak.dart'; 
 
 class HalamanBeranda extends StatefulWidget {
   const HalamanBeranda({super.key});
@@ -22,7 +23,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
 
   late TabController _tabController;
 
-  // TUGAS 6: Membuat StreamController dan TextEditingController untuk pencarian
   final StreamController<String> _searchController = StreamController<String>.broadcast();
   final TextEditingController _searchInputController = TextEditingController();
 
@@ -34,7 +34,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
 
   @override
   void dispose() {
-    // TUGAS 6: Menutup stream controller saat halaman dihancurkan untuk mencegah memory leak
     _searchController.close();
     _searchInputController.dispose();
     _tabController.dispose();
@@ -113,7 +112,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          // TUGAS 6: Memodifikasi tab Utama Kontak dengan Column untuk menambahkan TextField pencarian
           Column(
             children: [
               Padding(
@@ -126,20 +124,16 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (text) {
-                    // Mengirimkan teks yang diketik ke dalam stream
                     _searchController.add(text);
                   },
                 ),
               ),
               Expanded(
-                // Menggunakan StreamBuilder untuk mendengarkan perubahan pada stream pencarian
                 child: StreamBuilder<String>(
                   stream: _searchController.stream,
                   builder: (context, snapshot) {
-                    // Mengambil kata kunci pencarian, ubah ke huruf kecil
                     String query = snapshot.data?.toLowerCase() ?? '';
 
-                    // Menyaring daftarKontak berdasarkan Nama ATAU Kategori
                     List<Map<String, dynamic>> filteredList = daftarKontak.where((kontak) {
                       bool matchNama = (kontak['nama'] ?? '').toLowerCase().contains(query);
                       bool matchKategori = (kontak['kategori'] ?? '').toLowerCase().contains(query);
@@ -173,6 +167,62 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
                                 title: Text(item['nama'] ?? ''),
                                 subtitle: Text('${item['email']}\n${item['no_hp']}\nKategori: ${item['kategori'] ?? 'Tanpa kategori'}'),
                                 isThreeLine: true,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => HalamanEditKontak(kontak: item),
+                                          ),
+                                        );
+                                        
+                                        if (result != null && result is Map<String, dynamic>) {
+                                          setState(() {
+                                            int originalIndex = daftarKontak.indexOf(item);
+                                            if (originalIndex != -1) {
+                                              daftarKontak[originalIndex] = result;
+                                              _searchController.add(_searchInputController.text);
+                                            }
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: const Text('Konfirmasi'),
+                                              content: Text('Apakah Anda yakin ingin menghapus ${item['nama']}?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  child: const Text('Batal'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      daftarKontak.remove(item);
+                                                      _searchController.add(_searchInputController.text);
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               );
                             },
                           );
@@ -182,7 +232,6 @@ class _HalamanBerandaState extends State<HalamanBeranda> with SingleTickerProvid
             ],
           ),
                 
-          // Tampilan tab Favorit
           daftarFavorit.isEmpty
               ? const Center(child: Text('Belum ada kontak favorit'))
               : ListView.builder(
